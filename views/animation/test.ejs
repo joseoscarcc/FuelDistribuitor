@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WebSocket Client</title>
+  <script>
+    // Connect to the WebSocket server
+    const socket = new WebSocket('ws://127.0.0.1:3001');
+
+    socket.onopen = function(event) {
+      console.log('WebSocket connection opened');
+    };
+
+    socket.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+      console.log('Received data:', data.tankHeight);
+      // Assuming the data is the tank height, display it in the page
+      document.getElementById('tankHeight').textContent = data.tankHeight;
+    };
+
+    socket.onerror = function(error) {
+      console.error('WebSocket error:', error);
+    };
+  </script>
+</head>
+<body>
+  <h1>Tank Height: <span id="tankHeight"></span></h1>
+</body>
+</html>

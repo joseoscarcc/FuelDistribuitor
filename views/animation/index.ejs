@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <title>Queretaro Fuel Distribuitor</title>
+  <style>
+    canvas {
+      border: 1px solid rgb(29, 188, 69);
+      margin-left: 50px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1 class="mb-4">Queretaro Fuel Distribuitor</h1>
+    <div class="card mt-4">
+      <div class="card-body">
+        <h2 class="mb-4">Tank Automation Orders</h2>
+        <h4 class="card-title">Fuel Site "Bernardo Quintana"</h4>
+        <div class="card-subtitle text-muted mb-2">
+          Site: PL/123/EXP</br>Actualizado
+        </div>
+    <canvas id="regular" width="200" height="300"></canvas>
+    <canvas id="premium" width="200" height="300"></canvas>
+    <canvas id="diesel" width="200" height="300"></canvas>
+  </div>
+</div>
+</div>
+  <script>
+    function drawTank(canvas, ctx, tankHeight, tankWidth, color) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Calculate the scaled height to fit within the canvas
+      const scaledHeight = (tankHeight / maxTankHeight) * canvas.height;
+
+      ctx.fillStyle = color;
+      ctx.fillRect(50, canvas.height - scaledHeight, tankWidth, scaledHeight);
+    }
+
+    function updateTank(canvas, ctx, newHeight, tankWidth, color) {
+      tankHeight = newHeight;
+      drawTank(canvas, ctx, tankHeight, tankWidth, color);
+    }
+
+    const maxTankHeight = 1024;
+    let tankHeight = maxTankHeight;
+    let tankWidth = 100;
+
+    const canvasRegular = document.getElementById('regular');
+    const ctx = canvasRegular.getContext('2d');
+
+    // Set up WebSocket connection to the server
+    const socket = new WebSocket('ws://127.0.0.1:3001');
+
+    // Connection opened
+    socket.addEventListener('open', (event) => {
+      console.log('WebSocket connection opened');
+    });
+
+    // Listen for messages from the server
+    socket.addEventListener('message', (event) => {
+      const data = JSON.parse(event.data);
+      updateTank(canvasRegular, ctx, data.tankHeight, tankWidth, 'green');
+    });
+
+    // Initial drawing
+    drawTank(canvasRegular, ctx, tankHeight, tankWidth, 'green');
+
+    const canvasPremium = document.getElementById('premium');
+    const canvasDiesel = document.getElementById('diesel');
+    const ctxPremium = canvasPremium.getContext('2d');
+    const ctxDiesel = canvasDiesel.getContext('2d');
+
+    // Initial tank parameters
+    let tankHeightPremium = 900;
+    let tankWidthPremium = 100;
+
+    function handleMqttData(canvas, ctx, data, tankWidth, color) {
+      // Adjust tank height based on the received data
+      updateTank(canvas, ctx, data.fuelLevel, tankWidth, color);
+    }
+
+    // Simulate MQTT data updates (replace this with your actual MQTT setup)
+    setInterval(() => {
+      const randomFuelLevel = Math.max(0, tankHeightPremium - Math.random() * 300);
+      handleMqttData(canvasPremium, ctxPremium, { fuelLevel: randomFuelLevel }, tankWidthPremium, 'red');
+      handleMqttData(canvasDiesel, ctxDiesel, { fuelLevel: randomFuelLevel }, tankWidthPremium, 'black');
+    }, 2000);
+
+    // Initial drawing
+    drawTank(canvasPremium, ctxPremium, tankHeightPremium, tankWidthPremium, 'red');
+    drawTank(canvasDiesel, ctxDiesel, tankHeightPremium, tankWidthPremium, 'black');
+</script>
+</body>
+</html>
